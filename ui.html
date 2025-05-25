@@ -1,0 +1,1524 @@
+<!-- 
+  Note: This is a Figma plugin UI file. 
+  ES6+ features are not supported in Figma plugins.
+  Keep all JavaScript code ES5 compatible.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tailwind OKLCH to Figma Variables</title>
+    <style>
+      /* Inline CSS - Required for Figma plugins */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --primary: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --border: 214.3 31.8% 91.4%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --radius: 8px;
+        --success: 142.1 76.2% 36.3%;
+        --warning: 47.9 95.8% 53.1%;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        color: hsl(var(--foreground));
+        background-color: hsl(var(--background));
+        padding: 20px;
+      }
+
+      #app {
+        max-width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .section {
+        opacity: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        padding: 16px 0;
+        background: hsl(var(--background));
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        margin-bottom: 4px;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 500;
+        max-width: 320px;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
+
+      /* Collection Selection */
+      .collection-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 24px;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+      }
+
+      .collection-card h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: hsl(var(--foreground));
+      }
+
+      .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        cursor: pointer;
+        padding: 12px;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+      }
+
+      .radio-option:hover {
+        background: hsl(var(--muted) / 0.5);
+      }
+
+      .radio-option.selected {
+        background: hsl(var(--accent));
+        border-color: hsl(var(--primary));
+      }
+
+      .radio-input {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid hsl(var(--border));
+        border-radius: 50%;
+        margin: 0;
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .radio-input:checked {
+        border-color: hsl(var(--primary));
+      }
+
+      .radio-input:checked::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 8px;
+        height: 8px;
+        background: hsl(var(--primary));
+        border-radius: 50%;
+      }
+
+      .radio-content {
+        flex: 1;
+      }
+
+      .radio-label {
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .radio-description {
+        font-size: 12px;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.4;
+      }
+
+      .collection-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      .collection-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      .collection-input:focus,
+      .collection-select:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+      }
+
+      /* Upload area */
+      .upload-area {
+        border: 2px dashed hsl(var(--border));
+        border-radius: calc(var(--radius) + 4px);
+        padding: 48px 24px;
+        text-align: center;
+        background: hsl(var(--background));
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .upload-area:hover {
+        border-color: hsl(var(--primary));
+        background: hsl(var(--accent));
+      }
+
+      .upload-content .upload-icon {
+        font-size: 56px;
+        margin-bottom: 16px;
+        opacity: 0.7;
+      }
+
+      .upload-content h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: hsl(var(--foreground));
+        line-height: 1.3;
+      }
+
+      .upload-content p {
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 24px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .supported-formats {
+        text-align: center;
+        margin-top: 16px;
+      }
+
+      .supported-formats small {
+        color: hsl(var(--muted-foreground));
+        font-size: 12px;
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 60px 24px;
+        background: hsl(var(--card));
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .loader {
+        width: 28px;
+        height: 28px;
+        border: 3px solid hsl(var(--muted));
+        border-top: 3px solid hsl(var(--primary));
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading p {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid transparent;
+        padding: 0 20px;
+        height: 44px;
+        gap: 8px;
+      }
+
+      .btn:disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .btn-primary {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border: 1px solid hsl(var(--primary));
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: hsl(var(--primary) / 0.9);
+      }
+
+      .btn-secondary {
+        background: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+        border: 1px solid hsl(var(--border));
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: hsl(var(--muted));
+      }
+
+      /* Cards */
+      .summary-card,
+      .result-group,
+      .error-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+      }
+
+      .summary-card {
+        padding: 24px;
+        text-align: center;
+      }
+
+      .summary-card.success {
+        border-color: hsl(var(--success) / 0.3);
+        background: hsl(var(--success) / 0.05);
+      }
+
+      .summary-card.warning {
+        border-color: hsl(var(--warning) / 0.3);
+        background: hsl(var(--warning) / 0.05);
+      }
+
+      .summary-card.error {
+        border-color: hsl(var(--destructive) / 0.3);
+        background: hsl(var(--destructive) / 0.05);
+      }
+
+      .summary-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .stat-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: hsl(var(--primary));
+        line-height: 1;
+      }
+
+      .summary-card.success .stat-number {
+        color: hsl(var(--success));
+      }
+
+      .summary-card.warning .stat-number {
+        color: hsl(var(--warning));
+      }
+
+      .summary-card.error .stat-number {
+        color: hsl(var(--destructive));
+      }
+
+      .stat-label {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* Result groups */
+      .result-group {
+        margin-bottom: 8px;
+        overflow: visible;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+      }
+
+      .result-group.collapsed .variable-list {
+        display: none;
+      }
+
+      .result-title {
+        padding: 12px 16px;
+        background: hsl(var(--muted));
+        border-bottom: 1px solid hsl(var(--border));
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        color: hsl(var(--foreground));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        padding-right: 40px;
+      }
+
+      .result-title::after {
+        content: "▼";
+        font-size: 10px;
+        position: absolute;
+        right: 16px;
+        transition: transform 0.2s ease;
+      }
+
+      .result-group.collapsed .result-title::after {
+        transform: rotate(-90deg);
+      }
+
+      .result-title:hover {
+        background: hsl(var(--muted) / 0.8);
+      }
+
+      .result-count {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        background: hsl(var(--background));
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+        margin-right: 8px;
+      }
+
+      .variable-list {
+        padding: 0;
+        max-height: none;
+        overflow-y: visible;
+        transition: all 0.2s ease;
+      }
+
+      .variable-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid hsl(var(--border));
+      }
+
+      .variable-item:last-child {
+        border-bottom: none;
+      }
+
+      .variable-item:hover {
+        background: hsl(var(--muted) / 0.3);
+      }
+
+      .variable-name {
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        flex: 1;
+        min-width: 0;
+        line-height: 1.3;
+      }
+
+      .color-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+        background: hsl(var(--muted) / 0.3);
+        padding: 12px;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .color-preview {
+        width: 32px;
+        height: 32px;
+        border-radius: calc(var(--radius) - 2px);
+        border: 2px solid hsl(var(--border));
+        flex-shrink: 0;
+        background: hsl(var(--background));
+      }
+
+      .color-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        min-width: 140px;
+      }
+
+      .color-value {
+        font-size: 12px;
+        color: hsl(var(--foreground));
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .color-meta {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.3;
+      }
+
+      .color-divider {
+        padding: 12px 16px;
+        background: hsl(var(--muted) / 0.5);
+        font-weight: 600;
+        font-size: 13px;
+        color: hsl(var(--foreground));
+        border-bottom: 1px solid hsl(var(--border));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        line-height: 1.3;
+      }
+
+      .color-divider-count {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        background: hsl(var(--background));
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+      }
+
+      .oklch-value {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        line-height: 1.3;
+      }
+
+      /* Actions */
+      .actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 16px;
+        border-top: 1px solid hsl(var(--border));
+      }
+
+      /* Error card */
+      .error-card {
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .error-card h3 {
+        color: hsl(var(--destructive));
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        line-height: 1.3;
+      }
+
+      .error-card p {
+        color: hsl(var(--destructive) / 0.8);
+        margin-bottom: 24px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      /* Responsive */
+      @media (max-width: 480px) {
+        body {
+          padding: 16px;
+        }
+
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+
+      /* Form Elements */
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        transition: all 0.2s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 8px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="header">
+        <h1>Tailwind OKLCH to Figma Variables</h1>
+        <p class="subtitle">
+          Convert CSS --color-name-number: oklch() <br />
+          variables to Figma
+        </p>
+      </div>
+
+      <!-- Collection Selection -->
+      <div id="collection-section" class="section">
+        <div class="collection-card">
+          <h3>📁 Select Variable Collection</h3>
+          <div class="radio-group">
+            <label class="radio-option" id="existing-option">
+              <input
+                type="radio"
+                name="collection-type"
+                value="existing"
+                class="radio-input"
+                id="existing-radio"
+              />
+              <div class="radio-content">
+                <span class="radio-label">Use Existing Collection</span>
+                <p class="radio-description">
+                  Add variables to an existing collection
+                </p>
+                <select class="collection-select hidden" id="collection-select">
+                  <option value="">Loading collections...</option>
+                </select>
+              </div>
+            </label>
+
+            <label class="radio-option" id="new-option">
+              <input
+                type="radio"
+                name="collection-type"
+                value="new"
+                class="radio-input"
+                id="new-radio"
+              />
+              <div class="radio-content">
+                <span class="radio-label">Create New Collection</span>
+                <p class="radio-description">
+                  Create a new collection for these variables
+                </p>
+                <input
+                  type="text"
+                  class="collection-input hidden"
+                  id="collection-input"
+                  placeholder="Tailwind Colors"
+                />
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="collection-continue" class="btn btn-primary" disabled>
+            Continue
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Section -->
+      <div id="upload-section" class="section hidden">
+        <div class="upload-area" id="upload-area">
+          <div class="upload-content">
+            <div class="upload-icon">🎨</div>
+            <h3>Upload CSS File</h3>
+            <p>Select a CSS file with --color-name-number: oklch() variables</p>
+            <input type="file" id="file-input" accept=".css" hidden />
+            <button id="browse-btn" class="btn btn-primary">Choose File</button>
+          </div>
+        </div>
+        <div class="supported-formats">
+          <small>Supported: .css files with Tailwind color patterns</small>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading-section" class="section hidden">
+        <div class="loading">
+          <div class="loader"></div>
+          <p id="loading-text">Parsing CSS file...</p>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview-section" class="section hidden">
+        <div style="display: flex; gap: 12px; margin-bottom: 16px">
+          <div class="summary-card success" style="flex: 1">
+            <div class="summary-stat">
+              <span class="stat-number" id="preview-create-count">0</span>
+              <span class="stat-label">Will Create</span>
+            </div>
+          </div>
+          <div class="summary-card warning" style="flex: 1">
+            <div class="summary-stat">
+              <span class="stat-number" id="preview-update-count">0</span>
+              <span class="stat-label">Will Update</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="apply-btn" class="btn btn-primary">
+            Generate Variables
+          </button>
+          <button id="preview-back-btn" class="btn btn-secondary">Back</button>
+        </div>
+
+        <div
+          style="
+            border-top: 1px solid hsl(var(--border));
+            margin: 24px 0 16px 0;
+          "
+        ></div>
+
+        <h2>📋 Preview Changes</h2>
+
+        <div id="preview-create" class="result-group collapsed">
+          <h3 class="result-title">✅ Will Create</h3>
+          <div id="preview-create-list" class="variable-list"></div>
+        </div>
+
+        <div id="preview-update" class="result-group collapsed">
+          <h3 class="result-title">⚠️ Will Update (Override Existing)</h3>
+          <div id="preview-update-list" class="variable-list"></div>
+        </div>
+
+        <div id="preview-invalid" class="result-group collapsed">
+          <h3 class="result-title">❌ Invalid Variables</h3>
+          <div id="preview-invalid-list" class="variable-list"></div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results-section" class="section hidden">
+        <h2>🎉 Results</h2>
+
+        <div class="summary-grid">
+          <div class="summary-card success">
+            <div class="summary-stat">
+              <span class="stat-number" id="created-count">0</span>
+              <span class="stat-label">Created</span>
+            </div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-stat">
+              <span class="stat-number" id="updated-count">0</span>
+              <span class="stat-label">Updated</span>
+            </div>
+          </div>
+          <div class="summary-card error">
+            <div class="summary-stat">
+              <span class="stat-number" id="failed-count">0</span>
+              <span class="stat-label">Failed</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="results-created" class="result-group">
+          <h3 class="result-title">✅ Created Variables</h3>
+          <div id="results-created-list" class="variable-list"></div>
+        </div>
+
+        <div id="results-updated" class="result-group">
+          <h3 class="result-title">⚠️ Updated Variables</h3>
+          <div id="results-updated-list" class="variable-list"></div>
+        </div>
+
+        <div id="results-failed" class="result-group">
+          <h3 class="result-title">❌ Failed Variables</h3>
+          <div id="results-failed-list" class="variable-list"></div>
+        </div>
+
+        <div class="actions">
+          <button id="upload-new-btn" class="btn btn-secondary">
+            Upload New File
+          </button>
+          <button id="close-btn" class="btn btn-primary">Close</button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-section" class="section hidden">
+        <div class="error-card">
+          <h3>⚠️ Error</h3>
+          <p id="error-message">Something went wrong.</p>
+          <button id="retry-btn" class="btn btn-primary">Start Over</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      console.log("Tailwind OKLCH Plugin UI loaded");
+
+      let isProcessing = false;
+      let currentResults = null;
+      let selectedCollection = null;
+      let availableCollections = [];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeElements();
+        loadCollections();
+      });
+
+      function initializeElements() {
+        const elements = {
+          // Collection selection
+          existingRadio: document.getElementById("existing-radio"),
+          newRadio: document.getElementById("new-radio"),
+          existingOption: document.getElementById("existing-option"),
+          newOption: document.getElementById("new-option"),
+          collectionSelect: document.getElementById("collection-select"),
+          collectionInput: document.getElementById("collection-input"),
+          collectionContinue: document.getElementById("collection-continue"),
+
+          // File upload
+          fileInput: document.getElementById("file-input"),
+          browseBtn: document.getElementById("browse-btn"),
+          uploadArea: document.getElementById("upload-area"),
+
+          // Navigation
+          previewBackBtn: document.getElementById("preview-back-btn"),
+          uploadNewBtn: document.getElementById("upload-new-btn"),
+          closeBtn: document.getElementById("close-btn"),
+          retryBtn: document.getElementById("retry-btn"),
+          applyBtn: document.getElementById("apply-btn"),
+          loadingText: document.getElementById("loading-text"),
+        };
+
+        // Collection selection listeners
+        elements.existingRadio.addEventListener(
+          "change",
+          handleCollectionTypeChange
+        );
+        elements.newRadio.addEventListener(
+          "change",
+          handleCollectionTypeChange
+        );
+        elements.collectionSelect.addEventListener(
+          "change",
+          validateCollectionSelection
+        );
+        elements.collectionInput.addEventListener(
+          "input",
+          validateCollectionSelection
+        );
+        elements.collectionContinue.addEventListener(
+          "click",
+          handleCollectionContinue
+        );
+
+        // File upload listeners
+        elements.fileInput.addEventListener("change", function (event) {
+          if (isProcessing) return;
+          const file = event.target.files[0];
+          if (file) processFile(file);
+        });
+
+        elements.browseBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (!isProcessing) elements.fileInput.click();
+        });
+
+        elements.uploadArea.addEventListener("click", function (e) {
+          if (
+            e.target === elements.browseBtn ||
+            elements.browseBtn.contains(e.target)
+          )
+            return;
+          if (!isProcessing) elements.fileInput.click();
+        });
+
+        // Navigation listeners
+        elements.previewBackBtn.addEventListener("click", function () {
+          showSection("upload-section");
+        });
+        elements.uploadNewBtn.addEventListener("click", resetToUpload);
+        elements.retryBtn.addEventListener("click", resetToCollection);
+
+        elements.applyBtn.addEventListener("click", function () {
+          if (currentResults && currentResults.valid) {
+            createVariables(currentResults.valid);
+          }
+        });
+
+        elements.closeBtn.addEventListener("click", function () {
+          parent.postMessage({ pluginMessage: { type: "close-plugin" } }, "*");
+        });
+
+        // Add accordion functionality to all result groups
+        var resultGroups = document.getElementsByClassName("result-group");
+        for (var i = 0; i < resultGroups.length; i++) {
+          var group = resultGroups[i];
+          var title = group.querySelector(".result-title");
+          if (title) {
+            title.addEventListener("click", function () {
+              var parentGroup = this.parentNode;
+              parentGroup.classList.toggle("collapsed");
+            });
+            // Ensure all groups start collapsed
+            group.classList.add("collapsed");
+          }
+        }
+
+        // Message handler
+        window.onmessage = function (event) {
+          var pluginMessage = event.data.pluginMessage;
+          var type = pluginMessage.type;
+          var success = pluginMessage.success;
+          var results = pluginMessage.results;
+          var message = pluginMessage.message;
+          var collections = pluginMessage.collections;
+          var error = pluginMessage.error;
+
+          switch (type) {
+            case "collections-loaded":
+              handleCollectionsLoaded(collections, error);
+              break;
+
+            case "collection-set":
+              if (success) {
+                showSection("upload-section");
+              }
+              break;
+
+            case "parsing-complete":
+              isProcessing = false;
+              if (success) {
+                currentResults = results;
+                displayPreview(results);
+                showSection("preview-section");
+              } else {
+                displayError(message);
+                showSection("error-section");
+              }
+              break;
+
+            case "creation-complete":
+              isProcessing = false;
+              if (success) {
+                displayCreationResults(results);
+                showSection("results-section");
+              } else {
+                displayError(message);
+                showSection("error-section");
+              }
+              break;
+          }
+        };
+      }
+
+      function loadCollections() {
+        parent.postMessage({ pluginMessage: { type: "get-collections" } }, "*");
+      }
+
+      function handleCollectionsLoaded(collections, error) {
+        availableCollections = collections || [];
+        const select = document.getElementById("collection-select");
+        const existingRadio = document.getElementById("existing-radio");
+
+        if (error || availableCollections.length === 0) {
+          // No collections available, default to create new
+          select.innerHTML =
+            '<option value="">No collections available</option>';
+          existingRadio.disabled = true;
+          document.getElementById("new-radio").checked = true;
+          document.getElementById("new-option").classList.add("selected");
+          document
+            .getElementById("collection-input")
+            .classList.remove("hidden");
+          document.getElementById("collection-input").value = "Tailwind Colors";
+        } else {
+          // Populate select with collections
+          select.innerHTML = "";
+          availableCollections.forEach(function (collection) {
+            const option = document.createElement("option");
+            option.value = collection.id;
+            option.textContent = collection.name;
+            select.appendChild(option);
+          });
+
+          // Auto-select first collection
+          existingRadio.checked = true;
+          document.getElementById("existing-option").classList.add("selected");
+          document
+            .getElementById("collection-select")
+            .classList.remove("hidden");
+          select.selectedIndex = 0;
+        }
+
+        validateCollectionSelection();
+      }
+
+      function handleCollectionTypeChange() {
+        const existingRadio = document.getElementById("existing-radio");
+        const newRadio = document.getElementById("new-radio");
+        const existingOption = document.getElementById("existing-option");
+        const newOption = document.getElementById("new-option");
+        const collectionSelect = document.getElementById("collection-select");
+        const collectionInput = document.getElementById("collection-input");
+
+        // Update selection styling
+        existingOption.classList.toggle("selected", existingRadio.checked);
+        newOption.classList.toggle("selected", newRadio.checked);
+
+        // Show/hide appropriate inputs
+        collectionSelect.classList.toggle("hidden", !existingRadio.checked);
+        collectionInput.classList.toggle("hidden", !newRadio.checked);
+
+        // Set default value for new collection
+        if (newRadio.checked && !collectionInput.value) {
+          collectionInput.value = "Tailwind Colors";
+        }
+
+        validateCollectionSelection();
+      }
+
+      function validateCollectionSelection() {
+        const existingRadio = document.getElementById("existing-radio");
+        const newRadio = document.getElementById("new-radio");
+        const collectionSelect = document.getElementById("collection-select");
+        const collectionInput = document.getElementById("collection-input");
+        const continueBtn = document.getElementById("collection-continue");
+
+        let isValid = false;
+
+        if (existingRadio.checked) {
+          isValid = collectionSelect.value !== "";
+        } else if (newRadio.checked) {
+          isValid = collectionInput.value.trim() !== "";
+        }
+
+        continueBtn.disabled = !isValid;
+      }
+
+      function handleCollectionContinue() {
+        const existingRadio = document.getElementById("existing-radio");
+        const collectionSelect = document.getElementById("collection-select");
+        const collectionInput = document.getElementById("collection-input");
+
+        if (existingRadio.checked) {
+          const selectedId = collectionSelect.value;
+          const selectedCollectionData = availableCollections.find(function (
+            c
+          ) {
+            return c.id === selectedId;
+          });
+
+          selectedCollection = {
+            id: selectedId,
+            name: selectedCollectionData.name,
+            isNew: false,
+          };
+        } else {
+          selectedCollection = {
+            name: collectionInput.value.trim(),
+            isNew: true,
+          };
+        }
+
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "set-collection",
+              collection: selectedCollection,
+            },
+          },
+          "*"
+        );
+      }
+
+      function processFile(file) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        if (!file.name.endsWith(".css")) {
+          displayError("Please upload a CSS file (.css extension required).");
+          showSection("error-section");
+          isProcessing = false;
+          return;
+        }
+
+        showSection("loading-section");
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          parent.postMessage(
+            {
+              pluginMessage: {
+                type: "parse-css",
+                cssContent: e.target.result,
+              },
+            },
+            "*"
+          );
+        };
+
+        reader.onerror = function () {
+          console.error("File read error");
+          displayError("Error reading file. Please try again.");
+          showSection("error-section");
+          isProcessing = false;
+        };
+
+        reader.readAsText(file);
+      }
+
+      function createVariables(variablesToCreate) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        document.getElementById("loading-text").textContent =
+          "Generating variables...";
+        showSection("loading-section");
+
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "create-variables",
+              variablesToCreate: variablesToCreate,
+            },
+          },
+          "*"
+        );
+      }
+
+      function showSection(sectionId) {
+        const sections = [
+          "collection-section",
+          "upload-section",
+          "loading-section",
+          "preview-section",
+          "results-section",
+          "error-section",
+        ];
+        sections.forEach(function (id) {
+          const section = document.getElementById(id);
+          if (section) section.classList.add("hidden");
+        });
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) targetSection.classList.remove("hidden");
+      }
+
+      function resetToCollection() {
+        isProcessing = false;
+        currentResults = null;
+        selectedCollection = null;
+        document.getElementById("loading-text").textContent =
+          "Parsing CSS file...";
+        showSection("collection-section");
+        const fileInput = document.getElementById("file-input");
+        if (fileInput) fileInput.value = "";
+      }
+
+      function resetToUpload() {
+        isProcessing = false;
+        currentResults = null;
+        document.getElementById("loading-text").textContent =
+          "Parsing CSS file...";
+        showSection("upload-section");
+        const fileInput = document.getElementById("file-input");
+        if (fileInput) fileInput.value = "";
+      }
+
+      function displayPreview(results) {
+        var toCreate = results.valid.filter(function (item) {
+          return !item.exists;
+        });
+        var toUpdate = results.valid.filter(function (item) {
+          return item.exists;
+        });
+
+        // Update summary cards
+        document.getElementById("preview-create-count").textContent =
+          toCreate.length;
+        document.getElementById("preview-update-count").textContent =
+          toUpdate.length;
+
+        populateList(
+          "preview-create",
+          "preview-create-list",
+          toCreate,
+          "create"
+        );
+        populateList(
+          "preview-update",
+          "preview-update-list",
+          toUpdate,
+          "update"
+        );
+        populateList(
+          "preview-invalid",
+          "preview-invalid-list",
+          results.invalid,
+          "invalid"
+        );
+
+        document.getElementById("apply-btn").disabled =
+          results.valid.length === 0;
+      }
+
+      function displayCreationResults(results) {
+        document.getElementById("created-count").textContent =
+          results.summary.created;
+        document.getElementById("updated-count").textContent =
+          results.summary.updated;
+        document.getElementById("failed-count").textContent =
+          results.summary.failed;
+
+        populateList(
+          "results-created",
+          "results-created-list",
+          results.created,
+          "created"
+        );
+        populateList(
+          "results-updated",
+          "results-updated-list",
+          results.updated,
+          "updated"
+        );
+        populateList(
+          "results-failed",
+          "results-failed-list",
+          results.failed,
+          "failed"
+        );
+      }
+
+      function populateList(sectionId, listId, items, type) {
+        var section = document.getElementById(sectionId);
+        var list = document.getElementById(listId);
+
+        if (items && items.length > 0) {
+          list.innerHTML = "";
+
+          // Group items by color family (e.g., "color/red", "color/blue")
+          var groupedItems = new Map();
+          items.forEach(function (item) {
+            var variableName = item.variable || item.newVariable;
+            // Extract color family: "color/red/25" -> "color/red"
+            var pathParts = variableName.split("/");
+            var colorFamily = pathParts.slice(0, -1).join("/"); // Remove the last part (weight)
+
+            if (!groupedItems.has(colorFamily)) {
+              groupedItems.set(colorFamily, []);
+            }
+            groupedItems.get(colorFamily).push(item);
+          });
+
+          // Sort groups by color family name
+          var sortedGroups = Array.from(groupedItems.entries()).sort(function (
+            a,
+            b
+          ) {
+            return a[0].localeCompare(b[0]);
+          });
+
+          // Create items with dividers for each color family
+          sortedGroups.forEach(function (groupData) {
+            var colorFamily = groupData[0];
+            var groupItems = groupData[1];
+
+            // Add color family divider
+            var divider = document.createElement("div");
+            divider.className = "color-divider";
+
+            // Add family name
+            var familyText = document.createElement("span");
+            familyText.textContent = colorFamily;
+            divider.appendChild(familyText);
+
+            // Add count
+            var countSpan = document.createElement("span");
+            countSpan.className = "color-divider-count";
+            countSpan.textContent =
+              groupItems.length +
+              " " +
+              (groupItems.length === 1 ? "variable" : "variables");
+            divider.appendChild(countSpan);
+
+            list.appendChild(divider);
+
+            // Sort items within group by weight number
+            groupItems.sort(function (a, b) {
+              var getWeight = function (item) {
+                var variableName = item.variable || item.newVariable;
+                var pathParts = variableName.split("/");
+                var weight = pathParts[pathParts.length - 1]; // Last part is the weight
+                return parseInt(weight) || 0;
+              };
+
+              return getWeight(a) - getWeight(b);
+            });
+
+            // Add items in this group
+            groupItems.forEach(function (item) {
+              list.appendChild(createVariableItem(item, type));
+            });
+          });
+
+          // Update title with count
+          var title = section.querySelector(".result-title");
+          var existingCount = title.querySelector(".result-count");
+          if (existingCount) {
+            existingCount.remove();
+          }
+          var countSpan = document.createElement("span");
+          countSpan.className = "result-count";
+          countSpan.textContent =
+            items.length +
+            " " +
+            (type === "create"
+              ? "new"
+              : type === "update"
+              ? "updates"
+              : "items");
+          title.appendChild(countSpan);
+
+          // Ensure section stays collapsed by default
+          section.classList.add("collapsed");
+          section.classList.remove("hidden");
+        } else {
+          section.classList.add("hidden");
+        }
+      }
+
+      function createVariableItem(item, type) {
+        const div = document.createElement("div");
+        div.className = "variable-item";
+
+        // Variable name - show only the weight (last part)
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "variable-name";
+        const variableName = item.variable || item.newVariable;
+        const pathParts = variableName.split("/");
+        const weight = pathParts[pathParts.length - 1]; // Last part is the weight
+        nameDiv.textContent = weight;
+
+        // Color info container
+        const colorInfo = document.createElement("div");
+        colorInfo.className = "color-info";
+
+        if (type !== "invalid" && type !== "failed") {
+          // Color preview - show even in preview by converting OKLCH to hex
+          const colorPreview = document.createElement("div");
+          colorPreview.className = "color-preview";
+
+          let hexColor = null;
+
+          // Get hex color - either from results or convert from OKLCH
+          if (item.finalColor) {
+            hexColor = item.finalColor;
+          } else if (item.oklch) {
+            hexColor = convertOklchToHex(item.oklch);
+          }
+
+          if (hexColor) {
+            colorPreview.style.backgroundColor = hexColor;
+          }
+
+          // Color details
+          const colorDetails = document.createElement("div");
+          colorDetails.className = "color-details";
+
+          // Always show hex value if we have it
+          const colorValue = document.createElement("div");
+          colorValue.className = "color-value";
+          colorValue.textContent = hexColor || "Converting...";
+
+          const oklchValue = document.createElement("div");
+          oklchValue.className = "oklch-value";
+          oklchValue.textContent = item.oklchString || "oklch(...)";
+
+          colorDetails.appendChild(colorValue);
+          colorDetails.appendChild(oklchValue);
+          colorInfo.appendChild(colorPreview);
+          colorInfo.appendChild(colorDetails);
+        } else {
+          // Error case
+          const errorDetails = document.createElement("div");
+          errorDetails.className = "color-details";
+
+          const errorMsg = document.createElement("div");
+          errorMsg.className = "color-value";
+          errorMsg.style.color = "hsl(var(--destructive))";
+          errorMsg.textContent =
+            typeof item.error === "string" ? item.error : "Error";
+
+          if (item.oklchString) {
+            const oklchValue = document.createElement("div");
+            oklchValue.className = "oklch-value";
+            oklchValue.textContent = item.oklchString;
+            errorDetails.appendChild(oklchValue);
+          }
+
+          errorDetails.appendChild(errorMsg);
+          colorInfo.appendChild(errorDetails);
+        }
+
+        div.appendChild(nameDiv);
+        div.appendChild(colorInfo);
+
+        return div;
+      }
+
+      // Helper function to convert OKLCH to hex for preview
+      function convertOklchToHex(oklch) {
+        try {
+          const l = oklch.l;
+          const c = oklch.c;
+          const h = oklch.h;
+
+          // Convert OKLCH to OKLab
+          const hRad = (h * Math.PI) / 180;
+          const okLabA = c * Math.cos(hRad);
+          const okLabB = c * Math.sin(hRad);
+
+          // OKLab to Linear RGB
+          const lms_l = l + 0.3963377774 * okLabA + 0.2158037573 * okLabB;
+          const lms_m = l - 0.1055613458 * okLabA - 0.0638541728 * okLabB;
+          const lms_s = l - 0.0894841775 * okLabA - 1.291485548 * okLabB;
+
+          const lms_l_cubed = lms_l * lms_l * lms_l;
+          const lms_m_cubed = lms_m * lms_m * lms_m;
+          const lms_s_cubed = lms_s * lms_s * lms_s;
+
+          const linear_r =
+            +4.0767416621 * lms_l_cubed -
+            3.3077115913 * lms_m_cubed +
+            0.2309699292 * lms_s_cubed;
+          const linear_g =
+            -1.2684380046 * lms_l_cubed +
+            2.6097574011 * lms_m_cubed -
+            0.3413193965 * lms_s_cubed;
+          const linear_b =
+            -0.0041960863 * lms_l_cubed -
+            0.7034186147 * lms_m_cubed +
+            1.707614701 * lms_s_cubed;
+
+          // Linear RGB to sRGB
+          function linearToSrgb(linear) {
+            if (linear <= 0.0031308) {
+              return 12.92 * linear;
+            } else {
+              return 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
+            }
+          }
+
+          const srgb_r = linearToSrgb(linear_r);
+          const srgb_g = linearToSrgb(linear_g);
+          const srgb_b = linearToSrgb(linear_b);
+
+          // Clamp and convert to hex
+          const r = Math.max(0, Math.min(255, Math.round(srgb_r * 255)));
+          const g = Math.max(0, Math.min(255, Math.round(srgb_g * 255)));
+          const b = Math.max(0, Math.min(255, Math.round(srgb_b * 255)));
+
+          return (
+            "#" +
+            r.toString(16).padStart(2, "0") +
+            g.toString(16).padStart(2, "0") +
+            b.toString(16).padStart(2, "0")
+          );
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function displayError(message) {
+        console.error("Plugin error:", message);
+        document.getElementById("error-message").textContent = message;
+      }
+    </script>
+  </body>
+</html>
