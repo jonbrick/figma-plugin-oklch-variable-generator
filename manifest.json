@@ -7,5 +7,5 @@
   "capabilities": [],
   "enableProposedApi": false,
   "editorType": ["figma"],
-  "permissions": ["currentuser"]
+  "permissions": ["currentuser", "teamlibrary"]
 }
